@@ -6,6 +6,12 @@ Based on [Official Pytorch implementation](https://github.com/DingXiaoH/RepLKNet
 
 Supports variable-shape inference.
 
+## Installation
+
+```bash
+pip install tfreplknet
+```
+
 ## Examples
 
 Default usage (without preprocessing):
@@ -42,11 +48,17 @@ with [ImageNet-v2 test set](https://www.tensorflow.org/datasets/catalog/imagenet
 ```python
 import tensorflow as tf
 import tensorflow_datasets as tfds
-from tfreplknet import RepLKNet31B224K1, preprocess_input
+from tfreplknet import RepLKNet31B224K1, RepLKNet31B384K1, preprocess_input
 
 def _prepare(example):
-    image = tf.image.resize(example['image'], (256, 256), method=tf.image.ResizeMethod.BICUBIC, antialias=False)
+    # For RepLKNet31B224K1
+    image = tf.image.resize(example['image'], (256, 256), method=tf.image.ResizeMethod.BICUBIC)
     image = tf.image.central_crop(image, 0.875)
+    
+    # For RepLKNet31B384K1
+    # image = tf.image.resize(example['image'], (438, 438), method=tf.image.ResizeMethod.BICUBIC)
+    # image = tf.image.central_crop(image, 0.877)
+    
     image = preprocess_input(image)
     
     return image, example['label']
@@ -64,8 +76,8 @@ print(history)
 
 | name | original acc@1 | ported acc@1 | original acc@5 | ported acc@5 |
 | :---: | :---: | :---: | :---: | :---: |
-| RepLKNet31B 224 1K | ? | ? | ? | ? |
-| RepLKNet31B 384 1K | ? | ? | ? | ? |
+| RepLKNet31B 224 1K | 75.29 | 75.13 | 92.60 | 92.88 |
+| RepLKNet31B 384 1K | ? | 76.46 | ? | 93.37 |
 
 ## Citation
 

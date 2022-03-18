@@ -91,20 +91,20 @@ def RepLKNet(filters, kernel_sizes=(31, 29, 27, 13), small_kernel=5, depths=(2, 
     x = SamePad(3)(x)
     x = layers.Conv2D(filters[0], 3, strides=2, use_bias=False, name='stem/0/conv')(x)
     x = layers.BatchNormalization(momentum=0.1, epsilon=1.001e-5, name='stem/0/bn')(x)
-    x = layers.ReLU()(x)
+    x = layers.ReLU(name='stem/0/relu')(x)
 
     x = layers.DepthwiseConv2D(3, padding='same', use_bias=False, name='stem/1/conv')(x)
     x = layers.BatchNormalization(momentum=0.1, epsilon=1.001e-5, name='stem/1/bn')(x)
-    x = layers.ReLU()(x)
+    x = layers.ReLU(name='stem/1/relu')(x)
 
     x = layers.Conv2D(filters[0], 1, use_bias=False, name='stem/2/conv')(x)
     x = layers.BatchNormalization(momentum=0.1, epsilon=1.001e-5, name='stem/2/bn')(x)
-    x = layers.ReLU()(x)
+    x = layers.ReLU(name='stem/2/relu')(x)
 
     x = SamePad(3)(x)
     x = layers.DepthwiseConv2D(3, strides=2, use_bias=False, name='stem/3/conv')(x)
     x = layers.BatchNormalization(momentum=0.1, epsilon=1.001e-5, name='stem/3/bn')(x)
-    x = layers.ReLU()(x)
+    x = layers.ReLU(name='stem/3/relu')(x)
 
     path_drops = np.linspace(0., path_drop, sum(depths))
 
@@ -118,12 +118,12 @@ def RepLKNet(filters, kernel_sizes=(31, 29, 27, 13), small_kernel=5, depths=(2, 
         if not_last:
             x = layers.Conv2D(filters[i + 1], 1, use_bias=False, name=f'transitions/{i}/0/conv')(x)
             x = layers.BatchNormalization(momentum=0.1, epsilon=1.001e-5, name=f'transitions/{i}/0/bn')(x)
-            x = layers.ReLU()(x)
+            x = layers.ReLU(name=f'transitions/{i}/0/relu')(x)
 
             x = SamePad(3)(x)
             x = layers.DepthwiseConv2D(3, strides=2, use_bias=False, name=f'transitions/{i}/1/conv')(x)
             x = layers.BatchNormalization(momentum=0.1, epsilon=1.001e-5, name=f'transitions/{i}/1/bn')(x)
-            x = layers.ReLU()(x)
+            x = layers.ReLU(name=f'transitions/{i}/1/relu')(x)
 
     x = layers.BatchNormalization(momentum=0.1, epsilon=1.001e-5, name='norm')(x)
 
