@@ -164,9 +164,7 @@ def RepLKNet(filters, kernel_sizes=(31, 29, 27, 13), small_kernel=5, depths=(2, 
     if 'imagenet' == weights and model_name in WEIGHT_URLS:
         weights_url = WEIGHT_URLS[model_name]
         weights_hash = WEIGHT_HASHES[model_name]
-        # weights_path = data_utils.get_file(origin=weights_url, file_hash=weights_hash, cache_subdir='tfreplknet')
-        weights_path = weights_url.replace('https://github.com/shkarupa-alex/tfreplknet/releases/download/',
-                                           '/Users/alex/Develop/tfreplknet/weights/')  # TODO
+        weights_path = data_utils.get_file(origin=weights_url, file_hash=weights_hash, cache_subdir='tfreplknet')
         model.load_weights(weights_path)
     elif weights is not None:
         model.load_weights(weights)
