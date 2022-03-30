@@ -8,7 +8,7 @@ class TestBlock(keras_parameterized.TestCase):
     def test_layer(self):
         testing_utils.layer_test(
             Block,
-            kwargs={'kernel_size': 13, 'small_kernel': 5, 'dropout': 0.},
+            kwargs={'kernel_size': 13, 'small_kernel': 5, 'ratio': 1., 'dropout': 0.},
             input_shape=[2, 64, 64, 3],
             input_dtype='float32',
             expected_output_shape=[None, 64, 64, 3],
@@ -16,7 +16,7 @@ class TestBlock(keras_parameterized.TestCase):
         )
         testing_utils.layer_test(
             Block,
-            kwargs={'kernel_size': 31, 'small_kernel': 5, 'dropout': .2},
+            kwargs={'kernel_size': 31, 'small_kernel': None, 'ratio': 1.5, 'dropout': .2},
             input_shape=[2, 64, 64, 3],
             input_dtype='float32',
             expected_output_shape=[None, 64, 64, 3],

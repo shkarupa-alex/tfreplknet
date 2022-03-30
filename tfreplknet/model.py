@@ -6,20 +6,32 @@ from keras.utils import data_utils, layer_utils
 from tfreplknet.pad import SamePad
 from tfreplknet.stage import Stage
 
-BASE_URL = 'https://github.com/shkarupa-alex/tfreplknet/releases/download/1.0.0/{}.h5'
+BASE_URL = 'https://github.com/shkarupa-alex/tfreplknet/releases/download/{}/{}.h5'
+WEIGHT_URLS = {
+    'replknet_b_224_in1k': BASE_URL.format('1.0.0', 'rep_l_k_net_31_b_224_k1'),
+    'replknet_b_224_in21k': BASE_URL.format('1.0.0', 'rep_l_k_net_31_b_224_k21'),
+    'replknet_b_384_in1k': BASE_URL.format('1.0.0', 'rep_l_k_net_31_b_384_k1'),
+    # 'replknet_b_384_in21k': '',
+    'replknet_l_384_in1k': BASE_URL.format('1.0.0', 'rep_l_k_net_31_l_384_k1'),
+    'replknet_l_384_in21k': BASE_URL.format('1.0.0', 'rep_l_k_net_31_l_384_k21'),
+    'replknet_xl_320_in1k': BASE_URL.format('1.1.0', 'rep_l_k_net_27_xl_320_k1'),
+    'replknet_xl_320_in21k': BASE_URL.format('1.1.0', 'rep_l_k_net_27_xl_320_k21')
+}
 WEIGHT_HASHES = {
-    'rep_l_k_net_31_b_224_k1': 'b25e86d899e1fdf6910bc257edd681d2fbad2e963220b4886c6b0690328927d5',
-    'rep_l_k_net_31_b_224_k21': '65dc869425664d76909c12257d907015302681c68328349030c4e2e13eff1b63',
-    'rep_l_k_net_31_b_384_k1': 'f0ee368fdfbf3302ea07323fa5aa4c24f6612047327916b0b9ace40ab9d41bec',
-    # 'rep_l_k_net_31_b_384_k21': '',
-    'rep_l_k_net_31_l_384_k1': '4c5e87d8734b7a5e0e15955966c37e68de77a9fe4f573f7f78b992a0194367df',
-    'rep_l_k_net_31_l_384_k21': '5e616b0a5dbd67119ed1c5b2ee037bfbb5c360507689355fbf6e0240a4b47c62',
+    'replknet_b_224_in1k': 'b25e86d899e1fdf6910bc257edd681d2fbad2e963220b4886c6b0690328927d5',
+    'replknet_b_224_in21k': '65dc869425664d76909c12257d907015302681c68328349030c4e2e13eff1b63',
+    'replknet_b_384_in1k': 'f0ee368fdfbf3302ea07323fa5aa4c24f6612047327916b0b9ace40ab9d41bec',
+    # 'replknet_b_384_in21k': '',
+    'replknet_l_384_in1k': '4c5e87d8734b7a5e0e15955966c37e68de77a9fe4f573f7f78b992a0194367df',
+    'replknet_l_384_in21k': '5e616b0a5dbd67119ed1c5b2ee037bfbb5c360507689355fbf6e0240a4b47c62',
+    'replknet_xl_320_in1k': '1fb933ef6a19ba66e892d5c2badf1f950a91445962e414c319ace533913b7bee',
+    'replknet_xl_320_in21k': 'f736eb51236325ff4e03e26611ffa773fa7b5f9b170e439334ee6d99c9f599e1'
 }
 
 
-def RepLKNet(filters, kernel_sizes=(31, 29, 27, 13), small_kernel=5, depths=(2, 2, 18, 2), ffn_ratio=4, path_drop=0.3,
-             model_name='rep_l_k_net', include_top=True, weights=None, input_tensor=None, input_shape=None,
-             pooling=None, classes=1000, classifier_activation='softmax'):
+def RepLKNet(filters, kernel_sizes=(31, 29, 27, 13), small_kernel=5, depths=(2, 2, 18, 2), dw_ratio=1., ffn_ratio=4.,
+             path_drop=0.3, model_name='rep_l_k_net', include_top=True, weights=None, input_tensor=None,
+             input_shape=None, pooling=None, classes=1000, classifier_activation='softmax'):
     """Instantiates the Re-parameterized Large Kernel Network architecture.
 
     Args:
@@ -27,6 +39,7 @@ def RepLKNet(filters, kernel_sizes=(31, 29, 27, 13), small_kernel=5, depths=(2, 
       kernel_sizes: large kernel size for different stages.
       small_kernel: small kernel size for all stages.
       depths: depth of each stage.
+      dw_ratio: ratio of feed-forward hidden units to embedding units.
       ffn_ratio: ratio of feed-forward hidden units to embedding units.
       path_drop: stochastic depth rate.
       model_name: model name.
@@ -113,8 +126,8 @@ def RepLKNet(filters, kernel_sizes=(31, 29, 27, 13), small_kernel=5, depths=(2, 
         not_last = i != len(depths) - 1
 
         x = Stage(
-            kernel_size=kernel_sizes[i], small_kernel=small_kernel, ratio=ffn_ratio, dropout=path_drop,
-            name=f'stages/{i}')(x)
+            kernel_size=kernel_sizes[i], small_kernel=small_kernel, dw_ratio=dw_ratio, ffn_ratio=ffn_ratio,
+            dropout=path_drop, name=f'stages/{i}')(x)
         if not_last:
             x = layers.Conv2D(filters[i + 1], 1, use_bias=False, name=f'transitions/{i}/0/conv')(x)
             x = layers.BatchNormalization(momentum=0.1, epsilon=1.001e-5, name=f'transitions/{i}/0/bn')(x)
@@ -148,10 +161,12 @@ def RepLKNet(filters, kernel_sizes=(31, 29, 27, 13), small_kernel=5, depths=(2, 
     model = models.Model(inputs, x, name=model_name)
 
     # Load weights.
-    if 'imagenet' == weights and model_name in WEIGHT_HASHES:
-        weights_url = BASE_URL.format(model_name)
+    if 'imagenet' == weights and model_name in WEIGHT_URLS:
+        weights_url = WEIGHT_URLS[model_name]
         weights_hash = WEIGHT_HASHES[model_name]
-        weights_path = data_utils.get_file(origin=weights_url, file_hash=weights_hash, cache_subdir='tfreplknet')
+        # weights_path = data_utils.get_file(origin=weights_url, file_hash=weights_hash, cache_subdir='tfreplknet')
+        weights_path = weights_url.replace('https://github.com/shkarupa-alex/tfreplknet/releases/download/',
+                                           '/Users/alex/Develop/tfreplknet/weights/')  # TODO
         model.load_weights(weights_path)
     elif weights is not None:
         model.load_weights(weights)
@@ -173,34 +188,49 @@ def RepLKNet(filters, kernel_sizes=(31, 29, 27, 13), small_kernel=5, depths=(2, 
 
 # Architectures
 
-def RepLKNet31B(model_name, classes, filters=(128, 256, 512, 1024), weights='imagenet', **kwargs):
+def RepLKNetB(model_name, classes, filters=(128, 256, 512, 1024), weights='imagenet', **kwargs):
     return RepLKNet(model_name=model_name, filters=filters, weights=weights, classes=classes, **kwargs)
 
 
-def RepLKNet31L(model_name, classes, filters=(192, 384, 768, 1536), weights='imagenet', **kwargs):
+def RepLKNetL(model_name, classes, filters=(192, 384, 768, 1536), weights='imagenet', **kwargs):
     return RepLKNet(model_name=model_name, filters=filters, weights=weights, classes=classes, **kwargs)
+
+
+def RepLKNetXL(model_name, classes, filters=(256, 512, 1024, 2048), kernel_sizes=(27, 27, 27, 13), small_kernel=None,
+               dw_ratio=1.5, weights='imagenet', **kwargs):
+    return RepLKNet(model_name=model_name, filters=filters, kernel_sizes=kernel_sizes, small_kernel=small_kernel,
+                    dw_ratio=dw_ratio, weights=weights, classes=classes, **kwargs)
 
 
 # Weights
 
-def RepLKNet31B224K1(model_name='rep_l_k_net_31_b_224_k1', classes=1000, **kwargs):
-    return RepLKNet31B(model_name=model_name, classes=classes, **kwargs)
+def RepLKNetB224In1k(model_name='replknet_b_224_in1k', classes=1000, **kwargs):
+    return RepLKNetB(model_name=model_name, classes=classes, **kwargs)
 
 
-def RepLKNet31B224K21(model_name='rep_l_k_net_31_b_224_k21', classes=21841, **kwargs):
-    return RepLKNet31B(model_name=model_name, classes=classes, **kwargs)
+def RepLKNetB224In21k(model_name='replknet_b_224_in21k', classes=21841, **kwargs):
+    return RepLKNetB(model_name=model_name, classes=classes, **kwargs)
 
 
-def RepLKNet31B384K1(model_name='rep_l_k_net_31_b_384_k1', classes=1000, **kwargs):
-    return RepLKNet31B(model_name=model_name, classes=classes, **kwargs)
+def RepLKNetB384In1k(model_name='replknet_b_384_in1k', classes=1000, **kwargs):
+    return RepLKNetB(model_name=model_name, classes=classes, **kwargs)
 
 
-# def RepLKNet31B384K21(model_name='rep_l_k_net_31_b_384_k21', classes=21841, **kwargs):
-#     return RepLKNet31B(model_name=model_name, classes=classes, **kwargs)
-
-def RepLKNet31L384K1(model_name='rep_l_k_net_31_l_384_k1', classes=1000, **kwargs):
-    return RepLKNet31L(model_name=model_name, classes=classes, **kwargs)
+# def RepLKNetB384In21k(model_name='replknet_b_384_in21k', classes=21841, **kwargs):
+#     return RepLKNetB(model_name=model_name, classes=classes, **kwargs)
 
 
-def RepLKNet31L384K21(model_name='rep_l_k_net_31_l_384_k21', classes=21841, **kwargs):
-    return RepLKNet31L(model_name=model_name, classes=classes, **kwargs)
+def RepLKNetL384In1k(model_name='replknet_l_384_in1k', classes=1000, **kwargs):
+    return RepLKNetL(model_name=model_name, classes=classes, **kwargs)
+
+
+def RepLKNetL384In21k(model_name='replknet_l_384_in21k', classes=21841, **kwargs):
+    return RepLKNetL(model_name=model_name, classes=classes, **kwargs)
+
+
+def RepLKNetXL320In1k(model_name='replknet_xl_320_in1k', classes=1000, **kwargs):
+    return RepLKNetXL(model_name=model_name, classes=classes, **kwargs)
+
+
+def RepLKNetXL320In21k(model_name='replknet_xl_320_in21k', classes=21841, **kwargs):
+    return RepLKNetXL(model_name=model_name, classes=classes, **kwargs)

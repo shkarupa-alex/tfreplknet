@@ -3,7 +3,7 @@ import tensorflow as tf
 from absl.testing import parameterized
 from keras import keras_parameterized, testing_utils
 from keras.mixed_precision import policy as mixed_precision
-from tfreplknet import RepLKNet31B224K1
+from tfreplknet import RepLKNetB224In1k
 from tensorflow.python.util import object_identity
 from tensorflow.python.training.tracking import util as trackable_util
 
@@ -23,7 +23,7 @@ class TestModel(keras_parameterized.TestCase):
         if use_fp16:
             mixed_precision.set_global_policy('mixed_float16')
 
-        model = RepLKNet31B224K1(weights=None)
+        model = RepLKNetB224In1k(weights=None)
         model.compile(optimizer='rmsprop', loss='mse', run_eagerly=testing_utils.should_run_eagerly())
 
         images = np.random.random((10, 224, 224, 3)).astype('float32')
@@ -39,7 +39,7 @@ class TestModel(keras_parameterized.TestCase):
             self.assertIn(v, checkpointed_objects)
 
     def test_var_shape(self):
-        model = RepLKNet31B224K1(weights=None, include_top=False, input_shape=(None, None, 3))
+        model = RepLKNetB224In1k(weights=None, include_top=False, input_shape=(None, None, 3))
         model.compile(optimizer='rmsprop', loss='mse', run_eagerly=testing_utils.should_run_eagerly())
 
         images = np.random.random((10, 512, 384, 3)).astype('float32')

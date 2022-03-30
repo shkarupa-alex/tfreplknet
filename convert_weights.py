@@ -11,15 +11,19 @@ CHECKPOINTS = {
     'rep_l_k_net_31_b_384_k1': 'https://drive.google.com/file/d/1Sc46BWdXXm2fVP-K_hKKU_W8vAB-0duX/view?usp=sharing',
     # 'rep_l_k_net_31_b_384_k21': '',
     'rep_l_k_net_31_l_384_k1': 'https://drive.google.com/file/d/1JYXoNHuRvC33QV1pmpzMTKEni1hpWfBl/view?usp=sharing',
-    'rep_l_k_net_31_l_384_k21': 'https://drive.google.com/file/d/16jcPsPwo5rko7ojWS9k_W-svHX-iFknY/view?usp=sharing'
+    'rep_l_k_net_31_l_384_k21': 'https://drive.google.com/file/d/16jcPsPwo5rko7ojWS9k_W-svHX-iFknY/view?usp=sharing',
+    'rep_l_k_net_27_xl_320_k1': 'https://drive.google.com/file/d/1tPC60El34GntXByIRHb-z-Apm4Y5LX1T/view?usp=sharing',
+    'rep_l_k_net_27_xl_320_m73': 'https://drive.google.com/file/d/1CBHAEUlCzoHfiAQmMIjZhDMAIyHUmAAj/view?usp=sharing',
 }
 TF_MODELS = {
-    'rep_l_k_net_31_b_224_k1': tfreplknet.RepLKNet31B224K1,
-    'rep_l_k_net_31_b_224_k21': tfreplknet.RepLKNet31B224K21,
-    'rep_l_k_net_31_b_384_k1': tfreplknet.RepLKNet31B384K1,
+    'rep_l_k_net_31_b_224_k1': tfreplknet.RepLKNetB224In1k,
+    'rep_l_k_net_31_b_224_k21': tfreplknet.RepLKNetB224In21k,
+    'rep_l_k_net_31_b_384_k1': tfreplknet.RepLKNetB384In1k,
     # 'rep_l_k_net_31_b_384_k21': '',
-    'rep_l_k_net_31_l_384_k1': tfreplknet.RepLKNet31L384K1,
-    'rep_l_k_net_31_l_384_k21': tfreplknet.RepLKNet31L384K21
+    'rep_l_k_net_31_l_384_k1': tfreplknet.RepLKNetL384In1k,
+    'rep_l_k_net_31_l_384_k21': tfreplknet.RepLKNetL384In1k,
+    'rep_l_k_net_27_xl_320_k1': tfreplknet.RepLKNetXL320In1k,
+    'rep_l_k_net_27_xl_320_k21': tfreplknet.RepLKNetXL320In21k
 }
 
 
@@ -70,7 +74,11 @@ if '__main__' == __name__:
 
     weights_tf = []
     for w in model.weights:
+
         name = convert_name(w.name)
+        if name.startswith('head.') and \
+                ('head.cls_22k.weight' in weights_torch or 'head.cls_22k.bias' in weights_torch):
+            name = name.replace('head.', 'head.cls_22k.')
         assert name in weights_torch, f'Can\'t find weight {name} in checkpoint'
 
         weight = weights_torch.pop(name).numpy()

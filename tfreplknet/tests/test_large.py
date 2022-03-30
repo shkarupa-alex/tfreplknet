@@ -23,6 +23,14 @@ class TestLargeConv(keras_parameterized.TestCase):
             expected_output_shape=[None, 64, 64, 3],
             expected_output_dtype='float32'
         )
+        testing_utils.layer_test(
+            LargeConv,
+            kwargs={'kernel_size': 31, 'small_kernel': None},
+            input_shape=[2, 64, 64, 3],
+            input_dtype='float32',
+            expected_output_shape=[None, 64, 64, 3],
+            expected_output_dtype='float32'
+        )
 
     def test_reparam(self):
         inputs = tf.random.normal((2, 32, 32, 3)) * 10.

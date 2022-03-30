@@ -7,7 +7,7 @@ from tfreplknet.block import Block
 
 @register_keras_serializable(package='TFRepLKNet')
 class Stage(layers.Layer):
-    def __init__(self, kernel_size, small_kernel, ratio, dropout, **kwargs):
+    def __init__(self, kernel_size, small_kernel, dw_ratio, ffn_ratio, dropout, **kwargs):
         super().__init__(**kwargs)
         self.input_spec = layers.InputSpec(ndim=4)
 
@@ -16,7 +16,8 @@ class Stage(layers.Layer):
 
         self.kernel_size = kernel_size
         self.small_kernel = small_kernel
-        self.ratio = ratio
+        self.dw_ratio = dw_ratio
+        self.ffn_ratio = ffn_ratio
         self.dropout = dropout
 
     @shape_type_conversion
@@ -29,8 +30,9 @@ class Stage(layers.Layer):
         # noinspection PyAttributeOutsideInit
         self.blocks = models.Sequential()
         for i, dropout in enumerate(self.dropout):
-            self.blocks.add(Block(self.kernel_size, self.small_kernel, dropout, name=f'{self.name}/blocks/{i * 2}'))
-            self.blocks.add(FFN(self.ratio, dropout, name=f'{self.name}/blocks/{i * 2 + 1}'))
+            self.blocks.add(Block(
+                self.kernel_size, self.small_kernel, self.dw_ratio, dropout, name=f'{self.name}/blocks/{i * 2}'))
+            self.blocks.add(FFN(self.ffn_ratio, dropout, name=f'{self.name}/blocks/{i * 2 + 1}'))
 
         super().build(input_shape)
 
@@ -48,7 +50,8 @@ class Stage(layers.Layer):
         config.update({
             'kernel_size': self.kernel_size,
             'small_kernel': self.small_kernel,
-            'ratio': self.ratio,
+            'dw_ratio': self.dw_ratio,
+            'ffn_ratio': self.ffn_ratio,
             'dropout': self.dropout
         })
 

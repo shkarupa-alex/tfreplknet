@@ -7,12 +7,13 @@ from tfreplknet.drop import DropPath
 
 @register_keras_serializable(package='TFRepLKNet')
 class Block(layers.Layer):
-    def __init__(self, kernel_size, small_kernel, dropout, **kwargs):
+    def __init__(self, kernel_size, small_kernel, ratio, dropout, **kwargs):
         super().__init__(**kwargs)
         self.input_spec = layers.InputSpec(ndim=4)
 
         self.kernel_size = kernel_size
         self.small_kernel = small_kernel
+        self.ratio = ratio
         self.dropout = dropout
 
     @shape_type_conversion
@@ -27,7 +28,7 @@ class Block(layers.Layer):
 
         # noinspection PyAttributeOutsideInit
         self.pw1 = models.Sequential([
-            layers.Conv2D(channels, 1, use_bias=False, name=f'{self.name}/pw1/conv'),
+            layers.Conv2D(int(channels * self.ratio), 1, use_bias=False, name=f'{self.name}/pw1/conv'),
             layers.BatchNormalization(momentum=0.1, epsilon=1.001e-5, name=f'{self.name}/pw1/bn'),
             layers.ReLU()
         ], name='pw1')
@@ -65,6 +66,7 @@ class Block(layers.Layer):
         config.update({
             'kernel_size': self.kernel_size,
             'small_kernel': self.small_kernel,
+            'ratio': self.ratio,
             'dropout': self.dropout
         })
 
