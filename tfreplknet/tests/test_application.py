@@ -6,12 +6,14 @@ from keras.applications import imagenet_utils
 from keras.utils import data_utils
 
 MODEL_LIST = [
-    (tfreplknet.RepLKNet31B224K1, 224, 1024),
-    (tfreplknet.RepLKNet31B224K21, 224, 1024),
-    (tfreplknet.RepLKNet31B384K1, 384, 1024),
-    # (tfreplknet.RepLKNet31B384K21, 384, 1024),
-    (tfreplknet.RepLKNet31L384K1, 384, 1536),
-    (tfreplknet.RepLKNet31L384K21, 384, 1536),
+    (tfreplknet.RepLKNetB224In1k, 224, 1024),
+    (tfreplknet.RepLKNetB224In21k, 224, 1024),
+    (tfreplknet.RepLKNetB384In1k, 384, 1024),
+    # (tfreplknet.RepLKNetB384In21k, 384, 1024),
+    (tfreplknet.RepLKNetL384In1k, 384, 1536),
+    (tfreplknet.RepLKNetL384In21k, 384, 1536),
+    (tfreplknet.RepLKNetXL320In1k, 320, 2048),
+    (tfreplknet.RepLKNetXL320In21k, 320, 2048),
 ]
 
 
@@ -59,7 +61,7 @@ class ApplicationTest(tf.test.TestCase, parameterized.TestCase):
         self.assertEqual(model.output_shape[-1], last_dim)
 
     @parameterized.parameters(*MODEL_LIST)
-    def test_application_predict(self, app, size, _):
+    def test_application_predict(self, app, size, last_dim):
         model = app(weights='imagenet')
         self.assertIn(model.output_shape[-1], {1000, 21841})
 
@@ -68,7 +70,11 @@ class ApplicationTest(tf.test.TestCase, parameterized.TestCase):
         image = preprocessing.image.load_img(test_image, target_size=(size, size), interpolation='bicubic')
         image = preprocessing.image.img_to_array(image)[None, ...]
 
-        image_ = tfreplknet.preprocess_input(image)
+        if 2048 == last_dim:  # extra large model pretrained with different preprocessing
+            image_ = tfreplknet.preprocess_input_xl(image)
+        else:
+            image_ = tfreplknet.preprocess_input_bl(image)
+
         preds = model.predict(image_)
 
         if 1000 == preds.shape[-1]:
