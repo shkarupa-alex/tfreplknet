@@ -6,7 +6,7 @@ with open('README.md', 'r') as fh:
 
 setup(
     name='tfreplknet',
-    version='1.0.2',
+    version='1.1.0',
     description='Keras (TensorFlow v2) reimplementation of RepLKNet model.',
     long_description=long_description,
     long_description_content_type="text/markdown",
