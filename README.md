@@ -34,9 +34,9 @@ pip install tfreplknet
 Default usage (without preprocessing):
 
 ```python
-from tfreplknet import RepLKNetB224In1k  # + 4 other variants and input preprocessing
+from tfreplknet import RepLKNetB224In1k  # + other variants and input preprocessing (see table above)
 
-model = RepLKNetB224In1k()  # by default will download imagenet{1k, 21k}-pretrained weights
+model = RepLKNetB224In1k()  # by default will download pretrained weights
 model.compile(...)
 model.fit(...)
 ```
