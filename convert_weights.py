@@ -13,7 +13,7 @@ CHECKPOINTS = {
     'rep_l_k_net_31_l_384_k1': 'https://drive.google.com/file/d/1JYXoNHuRvC33QV1pmpzMTKEni1hpWfBl/view?usp=sharing',
     'rep_l_k_net_31_l_384_k21': 'https://drive.google.com/file/d/16jcPsPwo5rko7ojWS9k_W-svHX-iFknY/view?usp=sharing',
     'rep_l_k_net_27_xl_320_k1': 'https://drive.google.com/file/d/1tPC60El34GntXByIRHb-z-Apm4Y5LX1T/view?usp=sharing',
-    'rep_l_k_net_27_xl_320_m73': 'https://drive.google.com/file/d/1CBHAEUlCzoHfiAQmMIjZhDMAIyHUmAAj/view?usp=sharing',
+    'rep_l_k_net_27_xl_320_k21': 'https://drive.google.com/file/d/1CBHAEUlCzoHfiAQmMIjZhDMAIyHUmAAj/view?usp=sharing',
 }
 TF_MODELS = {
     'rep_l_k_net_31_b_224_k1': tfreplknet.RepLKNetB224In1k,
